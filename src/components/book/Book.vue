@@ -6,13 +6,42 @@
       <el-breadcrumb-item>图书资源列表</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card>
-      <el-form ref="textRow">
+      <el-form ref="textRow" class="diaglog">
         <el-row :gutter="20" >
           图书名称：<el-input placeholder="请输入内容" v-model="book.name" clearable></el-input>
           图书出版社：<el-input placeholder="请输入内容" v-model="book.publish" clearable></el-input>
-          图书类型：<el-input placeholder="请输入内容" v-model="book.type" clearable></el-input>
+          图书类型：<el-select v-model="type" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
+          <el-option
+            v-for="item in options"
+            :key="item"
+            :label="item"
+            :value="item">
+          </el-option>
+        </el-select>
+        </el-row>
+        <el-row :gutter="20">
+          添加时间：<el-date-picker
+            v-model="book.addTimeStartAndEnd"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            :unlink-panels=true
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期" clearable>
+          </el-date-picker>
+          发 行 时 间：<el-date-picker
+            v-model="book.publishTimeStartAndEnd"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            :unlink-panels=true
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期" clearable>
+          </el-date-picker>
           <el-button type="success" square @click="getBookListByOthers">查询</el-button>
           <el-button type="info" square @click="resetTextForm">重置</el-button>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="4">
             <el-button type="primary" @click="addDialogVisible = true">添加图书</el-button>
           </el-col>
@@ -22,7 +51,7 @@
       <el-table :data="bookList" border stripe>
         <el-table-column label="序号" type="index"></el-table-column>
         <el-table-column label="图书名称" prop="name"></el-table-column>
-        <el-table-column label="图书出版商" prop="publish"></el-table-column>
+        <el-table-column label="图书出版社" prop="publish"></el-table-column>
         <el-table-column label="图书类型" prop="type"></el-table-column>
         <el-table-column label="添加时间" prop="addTime"></el-table-column>
         <el-table-column label="发行时间" prop="publishTime"></el-table-column>
@@ -49,12 +78,12 @@
       </el-pagination>
     </el-card>
     <!--添加-->
-    <el-dialog title="添加图书" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed">
-      <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="80px">
+    <el-dialog title="添加图书" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed" class="diaglog">
+      <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px">
         <el-form-item label="图书名称" prop="name">
           <el-input v-model="addForm.name" ></el-input>
         </el-form-item>
-        <el-form-item label="图书出版商" prop="publish">
+        <el-form-item label="图书出版社" prop="publish">
           <el-input v-model="addForm.publish"></el-input>
         </el-form-item>
         <el-form-item label="图书类型" prop="type">
@@ -76,8 +105,8 @@
       </span>
     </el-dialog>
     <!--修改-->
-    <el-dialog title="修改图书信息" :visible.sync="editDialogVisible" width="32%" @close="editDialogClosed">
-      <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="80px">
+    <el-dialog title="修改图书信息" :visible.sync="editDialogVisible" width="32%" @close="editDialogClosed" class="diaglog">
+      <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="100px">
         <el-form-item label="图书名称" prop="name">
           <el-input v-model="editForm.name"></el-input>
         </el-form-item>
@@ -88,10 +117,20 @@
           <el-input v-model="editForm.type"></el-input>
         </el-form-item>
         <el-form-item label="添加时间" prop="addTime">
-          <el-input v-model="editForm.addTime"></el-input>
+          <el-date-picker
+            v-model="editForm.addTime"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            type="datetime"
+            placeholder="选择日期时间">
+          </el-date-picker>
         </el-form-item>
         <el-form-item label="发行时间" prop="publishTime">
-          <el-input v-model="editForm.publishTime"></el-input>
+          <el-date-picker
+            v-model="editForm.publishTime"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            type="datetime"
+            placeholder="选择日期时间">
+          </el-date-picker>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
@@ -107,10 +146,19 @@
 export default {
   data () {
     return {
+      options: [],
+      loading: false,
+      type: '',
       book: {
         name: '',
         publish: '',
-        type: ''
+        type: '',
+        addTimeStartAndEnd: '',
+        addTimeStart: '',
+        addTimeEnd: '',
+        publishTimeStartAndEnd: '',
+        publishTimeStart: '',
+        publishTimeEnd: ''
       },
       queryInfo: {
         pageNum: 1,
@@ -187,8 +235,14 @@ export default {
   created () {
     this.getBookList()
     this.getBookListByOthers()
+    this.remoteMethod()
   },
   methods: {
+    async remoteMethod () {
+      const { data: res } = await this.$http.get('http://localhost:8080/book/findAllType')
+      console.log(res)
+      this.options = res
+    },
     async showEditDialog (id) {
       console.log(id)
       const { data: res } = await this.$http.get('http://localhost:8080/book/findBookById/' + id)
@@ -200,6 +254,9 @@ export default {
       this.book.name = ''
       this.book.publish = ''
       this.book.type = ''
+      this.book.addTimeStartAndEnd = ''
+      this.book.publishTimeStartAndEnd = ''
+      this.type = ''
     },
     async getBookList () {
       await this.$http.get('http://localhost:8080/book/getBookList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '').then((res) => {
@@ -211,6 +268,21 @@ export default {
       })
     },
     async getBookListByOthers () {
+      console.log(this.book.addTimeStartAndEnd)
+      console.log(this.book.publishTimeStartAndEnd)
+      if (this.book.addTimeStartAndEnd !== '') {
+        this.book.addTimeStart = this.book.addTimeStartAndEnd[0]
+        this.book.addTimeEnd = this.book.addTimeStartAndEnd[1]
+      }
+      if (this.book.publishTimeStartAndEnd !== '') {
+        this.book.publishTimeStart = this.book.publishTimeStartAndEnd[0]
+        this.book.publishTimeEnd = this.book.publishTimeStartAndEnd[1]
+      }
+      this.book.type = this.type
+      console.log(this.book.addTimeStart)
+      console.log(this.book.addTimeEnd)
+      console.log(this.book.publishTimeStart)
+      console.log(this.book.publishTimeEnd)
       const { data: res } = await this.$http.post('http://localhost:8080/book/getBookListByOthers/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '', this.book)
       console.log(res)
       this.bookList = res.content
@@ -283,7 +355,7 @@ export default {
   }
 }
 </script>
-<style lang="less" scoped>
+<style scoped>
   .el-breadcrumb{
     margin-bottom: 15px;
     font-size: 12px;
@@ -300,7 +372,15 @@ export default {
   }
   .el-input{
     width: 300px;
+    margin-right: 30px;
+    margin-bottom: 15px;
+  }
+  .el-date-picker{
     margin-right: 10px;
+  }
+  .diaglog >>> .el-input__inner {
+    width: 300px!important;
+    margin-right: 30px;
     margin-bottom: 15px;
   }
 </style>

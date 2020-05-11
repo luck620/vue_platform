@@ -2,30 +2,29 @@
   <div>
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>账户管理</el-breadcrumb-item>
-      <el-breadcrumb-item>账户列表</el-breadcrumb-item>
+      <el-breadcrumb-item>课程管理</el-breadcrumb-item>
+      <el-breadcrumb-item>课程列表</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card>
       <el-form ref="textRow">
         <el-row :gutter="20" >
-          账户名称：<el-input placeholder="请输入内容" v-model="account.name" clearable></el-input>
-          真实姓名：<el-input placeholder="请输入内容" v-model="account.realName" clearable></el-input>
-          联系方式：<el-input placeholder="请输入内容" v-model="account.phone" clearable></el-input>
-          <el-button type="success" square @click="getAccountListByOthers">查询</el-button>
+          课程名称：<el-input placeholder="请输入内容" v-model="course.name" clearable></el-input>
+          参加课程人数：<el-input placeholder="请输入内容" v-model="course.numberStart" clearable class="stuNumberInput" type="number"></el-input>~
+          <el-input placeholder="请输入内容" v-model="course.numberEnd" clearable class="stuNumberInput" type="number"></el-input>
+          使用书籍：<el-input placeholder="请输入内容" v-model="course.useBook" clearable></el-input>
+          <el-button type="success" square @click="getCourseListByOthers">查询</el-button>
           <el-button type="info" square @click="resetTextForm">重置</el-button>
           <el-col :span="4">
-            <el-button type="primary" @click="addDialogVisible = true">添加用户</el-button>
+            <el-button type="primary" @click="addDialogVisible = true">添加课程</el-button>
           </el-col>
         </el-row>
       </el-form>
       <!--列表数据显示-->
-      <el-table :data="accountList" border stripe>
+      <el-table :data="courseList" border stripe>
         <el-table-column label="序号" type="index"></el-table-column>
-        <el-table-column label="姓名" prop="realName"></el-table-column>
-        <el-table-column label="账号名称" prop="name"></el-table-column>
-        <el-table-column label="密码" prop="password"></el-table-column>
-        <el-table-column label="手机" prop="phone"></el-table-column>
-        <el-table-column label="备注" prop="commit"></el-table-column>
+        <el-table-column label="课程名称" prop="name"></el-table-column>
+        <el-table-column label="学生人数" prop="stuNumber"></el-table-column>
+        <el-table-column label="使用书籍" prop="useBook"></el-table-column>
         <el-table-column label="操作" width="170px">
           <template slot-scope="scope">
             <el-tooltip :enterable="false" effect="dark" placement="top" content="修改">
@@ -49,22 +48,13 @@
       </el-pagination>
     </el-card>
     <!--添加-->
-    <el-dialog title="添加账户" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed">
+    <el-dialog title="添加课程" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed">
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="80px">
-        <el-form-item label="账户名称" prop="name">
+        <el-form-item label="课程名称" prop="name">
           <el-input v-model="addForm.name" ></el-input>
         </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="addForm.password"></el-input>
-        </el-form-item>
-        <el-form-item label="真实姓名" prop="realName">
-          <el-input v-model="addForm.realName"></el-input>
-        </el-form-item>
-        <el-form-item label="手机" prop="phone">
-          <el-input v-model="addForm.phone"></el-input>
-        </el-form-item>
-        <el-form-item label="备注" prop="commit">
-          <el-input v-model="addForm.commit"></el-input>
+        <el-form-item label="使用书籍" prop="realName">
+          <el-input v-model="addForm.useBook"></el-input>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
@@ -76,20 +66,11 @@
     <!--修改-->
     <el-dialog title="修改账户信息" :visible.sync="editDialogVisible" width="32%" @close="editDialogClosed">
       <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="80px">
-        <el-form-item label="账户名称" prop="name">
+        <el-form-item label="课程名称" prop="name">
           <el-input v-model="editForm.name"></el-input>
         </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="editForm.password"></el-input>
-        </el-form-item>
-        <el-form-item label="真实姓名" prop="realName">
-          <el-input v-model="editForm.realName"></el-input>
-        </el-form-item>
-        <el-form-item label="手机" prop="phone">
-          <el-input v-model="editForm.phone"></el-input>
-        </el-form-item>
-        <el-form-item label="备注" prop="commit">
-          <el-input v-model="editForm.commit"></el-input>
+        <el-form-item label="使用书籍" prop="useBook">
+          <el-input v-model="editForm.useBook"></el-input>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
@@ -104,152 +85,100 @@
 <script>
 export default {
   data () {
-    const checkMobile = (rule, value, cb) => {
-      // 验证手机号的正则表达式
-      const regMobile = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/
-      if (regMobile.test(value)) {
-        return cb()
-      }
-      cb(new Error('请输入合法的手机号'))
-    }
     return {
-      account: {
+      course: {
         name: '',
-        realName: '',
-        phone: ''
+        numberStart: '',
+        numberEnd: '',
+        useBook: ''
       },
       queryInfo: {
         pageNum: 1,
         pageSize: 10
       },
-      accountList: [],
+      courseList: [],
       total: 0,
       addDialogVisible: false,
       editDialogVisible: false,
       addForm: {
         name: '',
-        password: '',
-        realName: '',
-        phone: '',
-        commit: ''
+        useBook: ''
       },
       addFormRules: {
         name: [
-          { required: true, message: '请输入账户名称', trigger: 'blur' },
+          { required: true, message: '请输入课程名称', trigger: 'blur' },
           {
             min: 2,
             max: 10,
-            message: '账户名称的长度在2~10个字符之间',
+            message: '课程名称的长度在2~10个字符之间',
             trigger: 'blur'
           }
         ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          {
-            min: 6,
-            max: 15,
-            message: '密码的长度在6~15个字符之间',
-            trigger: 'blur'
-          }
-        ],
-        realName: [
-          { required: true, message: '请输入真实姓名', trigger: 'blur' },
-          {
-            min: 2,
-            max: 10,
-            message: '真实姓名的长度在2~10个字符之间',
-            trigger: 'blur'
-          }
-        ],
-        phone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { validator: checkMobile, trigger: 'blur' }
-        ],
-        commit: []
+        useBook: [
+          { required: true, message: '请输入使用书籍名称', trigger: 'blur' }
+        ]
       },
       editForm: {
         name: '',
-        password: '',
-        realName: '',
-        phone: '',
-        commit: ''
+        useBook: ''
       },
       editFormRules: {
         name: [
-          { required: true, message: '请输入账户名称', trigger: 'blur' },
+          { required: true, message: '请输入课程名称', trigger: 'blur' },
           {
             min: 2,
             max: 10,
-            message: '账户名称的长度在2~10个字符之间',
+            message: '课程名称的长度在2~10个字符之间',
             trigger: 'blur'
           }
         ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          {
-            min: 6,
-            max: 15,
-            message: '密码的长度在6~15个字符之间',
-            trigger: 'blur'
-          }
-        ],
-        realName: [
-          { required: true, message: '请输入真实姓名', trigger: 'blur' },
-          {
-            min: 2,
-            max: 10,
-            message: '真实姓名的长度在2~10个字符之间',
-            trigger: 'blur'
-          }
-        ],
-        phone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { validator: checkMobile, trigger: 'blur' }
-        ],
-        commit: []
+        useBook: [
+          { required: true, message: '请输入使用书籍名称', trigger: 'blur' }
+        ]
       }
     }
   },
   created () {
-    this.getAccountList()
-    this.getAccountListByOthers()
+    this.getCourseList()
+    this.getCourseListByOthers()
   },
   methods: {
     async showEditDialog (id) {
       console.log(id)
-      const { data: res } = await this.$http.get('http://localhost:8080/account/findAccountById/' + id)
+      const { data: res } = await this.$http.get('http://localhost:8080/course/findCourseById/' + id)
       console.log(res)
       this.editForm = res
       this.editDialogVisible = true
     },
     resetTextForm () {
-      this.account.name = ''
-      this.account.realName = ''
-      this.account.phone = ''
+      this.course.name = ''
+      this.course.numberStart = ''
+      this.course.numberEnd = ''
+      this.course.useBook = ''
     },
-    async getAccountList () {
-      await this.$http.get('http://localhost:8080/account/getAccountList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '').then((res) => {
+    async getCourseList () {
+      await this.$http.get('http://localhost:8080/course/getCourseList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '').then((res) => {
         console.log(res)
         console.log(res.data)
         if (res.status !== 200) return this.$message.error('获取账户列表失败')
-        this.accountList = res.data.content
+        this.courseList = res.data.content
         this.total = res.data.totalElements
       })
     },
-    async getAccountListByOthers () {
-      const { data: res } = await this.$http.post('http://localhost:8080/account/getAccountListByOthers/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '', this.account)
+    async getCourseListByOthers () {
+      const { data: res } = await this.$http.post('http://localhost:8080/course/getCourseListByOthers/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '', this.course)
       console.log(res)
-      this.accountList = res.content
+      this.courseList = res.content
       this.total = res.totalElements
     },
     handleSizeChange (newSize) {
       console.log(123)
       this.queryInfo.pageSize = newSize
-      this.getAccountList()
+      this.getCourseList()
     },
     handleCurrentChange (newPage) {
       this.queryInfo.pageNum = newPage
-      this.getAccountList()
+      this.getCourseList()
     },
     addDialogClosed () {
       this.$refs.addFormRef.resetFields()
@@ -258,14 +187,14 @@ export default {
       this.$refs.addFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
-        const { data: res } = await this.$http.post('http://localhost:8080/account/addAccount', this.addForm)
+        const { data: res } = await this.$http.post('http://localhost:8080/course/addCourse', this.addForm)
         console.log(res)
         if (res.code !== 200) {
           this.$message.error('添加账户失败！')
         }
         this.$message.success('添加账户成功！')
         this.addDialogVisible = false
-        this.getAccountList()
+        this.getCourseList()
       })
     },
     editDialogClosed () {
@@ -275,14 +204,14 @@ export default {
       this.$refs.editFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
-        const { data: res } = await this.$http.post('http://localhost:8080/account/editAccountById/' + this.editForm.id, this.editForm)
+        const { data: res } = await this.$http.post('http://localhost:8080/course/editCourseById/' + this.editForm.id, this.editForm)
         console.log(res)
         if (res.code !== 200) {
           this.$message.error('更新账户信息失败！')
         }
         this.$message.success('更新账户信息成功！')
         this.editDialogVisible = false
-        this.getAccountList()
+        this.getCourseList()
       })
     },
     async removeAccountById (id) {
@@ -298,13 +227,13 @@ export default {
       if (confirmResult !== 'confirm') {
         return this.$message.info('已取消删除')
       }
-      const { data: res } = await this.$http.get('http://localhost:8080/account/deleteAccountById/' + id)
+      const { data: res } = await this.$http.get('http://localhost:8080/course/deleteCourseById/' + id)
       console.log(res)
       if (res.code !== 200) {
         return this.$message.error('删除用户失败！')
       }
       this.$message.success('删除用户成功！')
-      this.getAccountList()
+      this.getCourseList()
     }
   }
 }
@@ -328,5 +257,8 @@ export default {
     width: 300px;
     margin-right: 10px;
     margin-bottom: 15px;
+  }
+  .stuNumberInput{
+    width: 140px;
   }
 </style>

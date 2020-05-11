@@ -2,17 +2,30 @@
   <div>
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>账户管理</el-breadcrumb-item>
-      <el-breadcrumb-item>账户列表</el-breadcrumb-item>
+      <el-breadcrumb-item>学生管理</el-breadcrumb-item>
+      <el-breadcrumb-item>学生列表</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card>
       <el-form ref="textRow">
         <el-row :gutter="20" >
-          账户名称：<el-input placeholder="请输入内容" v-model="account.name" clearable></el-input>
-          真实姓名：<el-input placeholder="请输入内容" v-model="account.realName" clearable></el-input>
-          联系方式：<el-input placeholder="请输入内容" v-model="account.phone" clearable></el-input>
-          <el-button type="success" square @click="getAccountListByOthers">查询</el-button>
+          学生姓名：<el-input placeholder="请输入内容" v-model="student.name" clearable></el-input>
+          学生学号：<el-input placeholder="请输入内容" v-model="student.sno" clearable></el-input>
+          联系方式：<el-input placeholder="请输入内容" v-model="student.phone" clearable></el-input>
+        </el-row>
+        <el-row :gutter="20" >
+          电子邮箱：<el-input placeholder="请输入内容" v-model="student.mail" clearable></el-input>
+          学生年级：<el-select v-model="grade" filterable placeholder="请选择">
+          <el-option
+            v-for="item in options"
+            :key="item"
+            :label="item"
+            :value="item">
+          </el-option>
+        </el-select>
+          <el-button type="success" square @click="getStudentListByOthers">查询</el-button>
           <el-button type="info" square @click="resetTextForm">重置</el-button>
+        </el-row>
+        <el-row :gutter="20" >
           <el-col :span="4">
             <el-button type="primary" @click="addDialogVisible = true">添加用户</el-button>
           </el-col>
@@ -21,11 +34,12 @@
       <!--列表数据显示-->
       <el-table :data="accountList" border stripe>
         <el-table-column label="序号" type="index"></el-table-column>
-        <el-table-column label="姓名" prop="realName"></el-table-column>
-        <el-table-column label="账号名称" prop="name"></el-table-column>
+        <el-table-column label="姓名" prop="name"></el-table-column>
+        <el-table-column label="学号" prop="sno"></el-table-column>
         <el-table-column label="密码" prop="password"></el-table-column>
         <el-table-column label="手机" prop="phone"></el-table-column>
-        <el-table-column label="备注" prop="commit"></el-table-column>
+        <el-table-column label="邮箱" prop="mail"></el-table-column>
+        <el-table-column label="年级" prop="grade"></el-table-column>
         <el-table-column label="操作" width="170px">
           <template slot-scope="scope">
             <el-tooltip :enterable="false" effect="dark" placement="top" content="修改">
@@ -49,53 +63,73 @@
       </el-pagination>
     </el-card>
     <!--添加-->
-    <el-dialog title="添加账户" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed">
+    <el-dialog title="添加学生" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed">
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="80px">
-        <el-form-item label="账户名称" prop="name">
-          <el-input v-model="addForm.name" ></el-input>
+        <el-form-item label="学生姓名" prop="name">
+          <el-input v-model="addForm.name"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="addForm.password"></el-input>
         </el-form-item>
-        <el-form-item label="真实姓名" prop="realName">
-          <el-input v-model="addForm.realName"></el-input>
+        <el-form-item label="学生学号" prop="sno">
+          <el-input v-model="addForm.sno"></el-input>
         </el-form-item>
         <el-form-item label="手机" prop="phone">
           <el-input v-model="addForm.phone"></el-input>
         </el-form-item>
-        <el-form-item label="备注" prop="commit">
-          <el-input v-model="addForm.commit"></el-input>
+        <el-form-item label="邮箱" prop="mail">
+          <el-input v-model="addForm.mail"></el-input>
+        </el-form-item>
+        <el-form-item label="年级" prop="grade">
+          <el-select v-model="grade" filterable placeholder="请选择">
+            <el-option
+              v-for="item in options"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addAccount" >确 定</el-button>
+        <el-button type="primary" @click="addStudent" >确 定</el-button>
       </span>
     </el-dialog>
     <!--修改-->
     <el-dialog title="修改账户信息" :visible.sync="editDialogVisible" width="32%" @close="editDialogClosed">
       <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="80px">
-        <el-form-item label="账户名称" prop="name">
+        <el-form-item label="学生姓名" prop="name">
           <el-input v-model="editForm.name"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="editForm.password"></el-input>
         </el-form-item>
-        <el-form-item label="真实姓名" prop="realName">
-          <el-input v-model="editForm.realName"></el-input>
+        <el-form-item label="学号" prop="sno">
+          <el-input v-model="editForm.sno"></el-input>
         </el-form-item>
         <el-form-item label="手机" prop="phone">
           <el-input v-model="editForm.phone"></el-input>
         </el-form-item>
-        <el-form-item label="备注" prop="commit">
-          <el-input v-model="editForm.commit"></el-input>
+        <el-form-item label="邮箱" prop="mail">
+          <el-input v-model="editForm.mail"></el-input>
+        </el-form-item>
+        <el-form-item label="年级" prop="grade">
+          <el-select v-model="editForm.grade" filterable placeholder="请选择">
+            <el-option
+              v-for="item in options"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <!-- 底部区域 -->
       <span slot="footer" class="dialog-footer">
         <el-button @click="editDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="editAccount" >确 定</el-button>
+        <el-button type="primary" @click="editStudent" >确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -112,12 +146,28 @@ export default {
       }
       cb(new Error('请输入合法的手机号'))
     }
+    const checkEmail = (rule, value, cb) => {
+      // 验证邮箱的正则表达式
+      const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/
+
+      if (regEmail.test(value)) {
+        // 合法的邮箱
+        return cb()
+      }
+
+      cb(new Error('请输入合法的邮箱'))
+    }
     return {
-      account: {
+      student: {
         name: '',
-        realName: '',
-        phone: ''
+        sno: '',
+        phone: '',
+        mail: '',
+        grade: ''
       },
+      options: [
+        '大一', '大二', '大三', '大四'
+      ],
       queryInfo: {
         pageNum: 1,
         pageSize: 10
@@ -129,22 +179,32 @@ export default {
       addForm: {
         name: '',
         password: '',
-        realName: '',
+        sno: '',
         phone: '',
-        commit: ''
+        mail: '',
+        grade: ''
       },
+      grade: '',
       addFormRules: {
         name: [
-          { required: true, message: '请输入账户名称', trigger: 'blur' },
+          {
+            required: true,
+            message: '请输入学生姓名',
+            trigger: 'blur'
+          },
           {
             min: 2,
             max: 10,
-            message: '账户名称的长度在2~10个字符之间',
+            message: '学生姓名的长度在2~10个字符之间',
             trigger: 'blur'
           }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+          {
+            required: true,
+            message: '请输入密码',
+            trigger: 'blur'
+          },
           {
             min: 6,
             max: 15,
@@ -152,20 +212,42 @@ export default {
             trigger: 'blur'
           }
         ],
-        realName: [
-          { required: true, message: '请输入真实姓名', trigger: 'blur' },
+        sno: [
+          {
+            required: true,
+            message: '请输入学号',
+            trigger: 'blur'
+          },
           {
             min: 2,
             max: 10,
-            message: '真实姓名的长度在2~10个字符之间',
+            message: '学号在2~10个字符之间',
             trigger: 'blur'
           }
         ],
         phone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { validator: checkMobile, trigger: 'blur' }
+          {
+            required: true,
+            message: '请输入手机号',
+            trigger: 'blur'
+          },
+          {
+            validator: checkMobile,
+            trigger: 'blur'
+          }
         ],
-        commit: []
+        mail: [
+          {
+            required: true,
+            message: '请输入邮箱',
+            trigger: 'blur'
+          },
+          {
+            validator: checkEmail,
+            trigger: 'blur'
+          }
+        ],
+        grade: []
       },
       editForm: {
         name: '',
@@ -176,16 +258,24 @@ export default {
       },
       editFormRules: {
         name: [
-          { required: true, message: '请输入账户名称', trigger: 'blur' },
+          {
+            required: true,
+            message: '请输入学生姓名',
+            trigger: 'blur'
+          },
           {
             min: 2,
             max: 10,
-            message: '账户名称的长度在2~10个字符之间',
+            message: '学生姓名的长度在2~10个字符之间',
             trigger: 'blur'
           }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+          {
+            required: true,
+            message: '请输入密码',
+            trigger: 'blur'
+          },
           {
             min: 6,
             max: 15,
@@ -193,51 +283,81 @@ export default {
             trigger: 'blur'
           }
         ],
-        realName: [
-          { required: true, message: '请输入真实姓名', trigger: 'blur' },
+        sno: [
+          {
+            required: true,
+            message: '请输入学号',
+            trigger: 'blur'
+          },
           {
             min: 2,
             max: 10,
-            message: '真实姓名的长度在2~10个字符之间',
+            message: '学号在2~10个字符之间',
             trigger: 'blur'
           }
         ],
         phone: [
-          { required: true, message: '请输入手机号', trigger: 'blur' },
-          { validator: checkMobile, trigger: 'blur' }
+          {
+            required: true,
+            message: '请输入手机号',
+            trigger: 'blur'
+          },
+          {
+            validator: checkMobile,
+            trigger: 'blur'
+          }
         ],
-        commit: []
+        mail: [
+          {
+            required: true,
+            message: '请输入邮箱',
+            trigger: 'blur'
+          },
+          {
+            validator: checkEmail,
+            trigger: 'blur'
+          }
+        ],
+        grade: [
+          {
+            required: true,
+            message: '请输入年级',
+            trigger: 'blur'
+          }
+        ]
       }
     }
   },
   created () {
-    this.getAccountList()
-    this.getAccountListByOthers()
+    this.getStudentList()
+    this.getStudentListByOthers()
   },
   methods: {
     async showEditDialog (id) {
       console.log(id)
-      const { data: res } = await this.$http.get('http://localhost:8080/account/findAccountById/' + id)
+      const { data: res } = await this.$http.get('http://localhost:8080/student/findStudentById/' + id)
       console.log(res)
       this.editForm = res
       this.editDialogVisible = true
     },
     resetTextForm () {
-      this.account.name = ''
-      this.account.realName = ''
-      this.account.phone = ''
+      this.student.name = ''
+      this.student.sno = ''
+      this.student.phone = ''
+      this.student.mail = ''
+      this.student.grade = ''
     },
-    async getAccountList () {
-      await this.$http.get('http://localhost:8080/account/getAccountList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '').then((res) => {
+    async getStudentList () {
+      await this.$http.get('http://localhost:8080/student/getStudentList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '').then((res) => {
         console.log(res)
         console.log(res.data)
-        if (res.status !== 200) return this.$message.error('获取账户列表失败')
+        if (res.status !== 200) return this.$message.error('获取学生列表失败')
         this.accountList = res.data.content
         this.total = res.data.totalElements
       })
     },
-    async getAccountListByOthers () {
-      const { data: res } = await this.$http.post('http://localhost:8080/account/getAccountListByOthers/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '', this.account)
+    async getStudentListByOthers () {
+      const { data: res } = await this.$http.post('http://localhost:8080/student/getStudentListByOthers/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '', this.student)
       console.log(res)
       this.accountList = res.content
       this.total = res.totalElements
@@ -245,44 +365,45 @@ export default {
     handleSizeChange (newSize) {
       console.log(123)
       this.queryInfo.pageSize = newSize
-      this.getAccountList()
+      this.getStudentList()
     },
     handleCurrentChange (newPage) {
       this.queryInfo.pageNum = newPage
-      this.getAccountList()
+      this.getStudentList()
     },
     addDialogClosed () {
       this.$refs.addFormRef.resetFields()
     },
-    addAccount () {
+    addStudent () {
       this.$refs.addFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
-        const { data: res } = await this.$http.post('http://localhost:8080/account/addAccount', this.addForm)
+        this.addForm.grade = this.grade
+        const { data: res } = await this.$http.post('http://localhost:8080/student/addStudent', this.addForm)
         console.log(res)
         if (res.code !== 200) {
           this.$message.error('添加账户失败！')
         }
         this.$message.success('添加账户成功！')
         this.addDialogVisible = false
-        this.getAccountList()
+        this.getStudentList()
       })
     },
     editDialogClosed () {
       this.$refs.editFormRef.resetFields()
     },
-    editAccount () {
+    editStudent () {
       this.$refs.editFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
-        const { data: res } = await this.$http.post('http://localhost:8080/account/editAccountById/' + this.editForm.id, this.editForm)
+        const { data: res } = await this.$http.post('http://localhost:8080/student/editStudentById/' + this.editForm.id, this.editForm)
         console.log(res)
         if (res.code !== 200) {
           this.$message.error('更新账户信息失败！')
         }
         this.$message.success('更新账户信息成功！')
         this.editDialogVisible = false
-        this.getAccountList()
+        this.getStudentList()
       })
     },
     async removeAccountById (id) {
@@ -298,18 +419,18 @@ export default {
       if (confirmResult !== 'confirm') {
         return this.$message.info('已取消删除')
       }
-      const { data: res } = await this.$http.get('http://localhost:8080/account/deleteAccountById/' + id)
+      const { data: res } = await this.$http.get('http://localhost:8080/student/deleteStudentById/' + id)
       console.log(res)
       if (res.code !== 200) {
         return this.$message.error('删除用户失败！')
       }
       this.$message.success('删除用户成功！')
-      this.getAccountList()
+      this.getStudentList()
     }
   }
 }
 </script>
-<style lang="less" scoped>
+<style scoped>
   .el-breadcrumb{
     margin-bottom: 15px;
     font-size: 12px;
@@ -327,6 +448,16 @@ export default {
   .el-input{
     width: 300px;
     margin-right: 10px;
+    margin-bottom: 15px;
+  }
+  .el-select{
+    width: 300px;
+    margin-right: 30px;
+    margin-bottom: 15px;
+  }
+  .diaglog >>> .el-input__inner {
+    width: 300px!important;
+    margin-right: 30px;
     margin-bottom: 15px;
   }
 </style>

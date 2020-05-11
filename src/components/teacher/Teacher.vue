@@ -13,7 +13,7 @@
           教师号：<el-input placeholder="请输入内容" v-model="teacherDTO.tno" clearable></el-input>
         </el-row>
         <el-row :gutter="20" >
-          教授课程：<el-select v-model="courseName" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
+          教授课程：<el-select v-model="courseName" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择" clearable>
           <el-option
             v-for="item in options"
             :key="item"
@@ -267,7 +267,7 @@ export default {
           { validator: checkEmail, trigger: 'blur' }
         ],
         courseName: [
-          { required: true, message: '请输入姓名', trigger: 'blur' }
+          { required: true, message: '请输入课程名称', trigger: 'blur' }
         ]
       }
     }
@@ -299,13 +299,11 @@ export default {
       this.courseName = ''
     },
     async getTeacherList () {
-      await this.$http.get('http://localhost:8080/teacher/getTeacherList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '').then((res) => {
-        console.log(res)
-        console.log(res.data)
-        if (res.status !== 200) return this.$message.error('获取账户列表失败')
-        this.teacherList = res.data
-        this.total = res.data.totalElements
-      })
+      const { data: res } = await this.$http.get('http://localhost:8080/teacher/getTeacherList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '')
+      console.log(res)
+      console.log(res.content)
+      this.teacherList = res.content
+      this.total = res.totalElements
     },
     async getTeacherListByOthers () {
       this.teacherDTO.courseName = this.courseName

@@ -56,7 +56,7 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="queryInfo.pageNum"
-        :page-sizes="[10, 20, 30 ,40, 100]"
+        :page-sizes="[1,2,10]"
         :page-size="queryInfo.pageSize"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total">
@@ -273,7 +273,7 @@ export default {
     }
   },
   created () {
-    this.getTeacherList()
+    // this.getTeacherList()
     this.getTeacherListByOthers()
     this.remoteMethod()
   },
@@ -298,28 +298,28 @@ export default {
       this.teacherDTO.courseName = ''
       this.courseName = ''
     },
-    async getTeacherList () {
-      const { data: res } = await this.$http.get('http://localhost:8080/teacher/getTeacherList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '')
-      console.log(res)
-      console.log(res.content)
-      this.teacherList = res.content
-      this.total = res.totalElements
-    },
+    // async getTeacherList () {
+    //   const { data: res } = await this.$http.get('http://localhost:8080/teacher/getTeacherList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '')
+    //   console.log(res)
+    //   console.log(res.content)
+    //   this.teacherList = res.content
+    //   this.total = res.totalElements
+    // },
     async getTeacherListByOthers () {
       this.teacherDTO.courseName = this.courseName
       const { data: res } = await this.$http.post('http://localhost:8080/teacher/getTeacherListByOthers/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '', this.teacherDTO)
       console.log(res)
-      this.teacherList = res
+      this.teacherList = res.content
       this.total = res.totalElements
     },
     handleSizeChange (newSize) {
       console.log(123)
       this.queryInfo.pageSize = newSize
-      this.getTeacherList()
+      this.getTeacherListByOthers()
     },
     handleCurrentChange (newPage) {
       this.queryInfo.pageNum = newPage
-      this.getTeacherList()
+      this.getTeacherListByOthers()
     },
     addDialogClosed () {
       this.$refs.addFormRef.resetFields()
@@ -336,7 +336,7 @@ export default {
         }
         this.$message.success('添加教师成功！')
         this.addDialogVisible = false
-        this.getTeacherList()
+        this.getTeacherListByOthers()
       })
     },
     editDialogClosed () {
@@ -353,7 +353,7 @@ export default {
         }
         this.$message.success('更新教师信息成功！')
         this.editDialogVisible = false
-        this.getTeacherList()
+        this.getTeacherListByOthers()
       })
     },
     async removeTeacherById (id) {
@@ -375,7 +375,7 @@ export default {
         return this.$message.error('删除用户失败！')
       }
       this.$message.success('删除用户成功！')
-      this.getTeacherList()
+      this.getTeacherListByOthers()
     }
   }
 }

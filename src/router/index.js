@@ -8,6 +8,7 @@ import Book from '../components/book/Book'
 import Course from '../components/course/Course'
 import Student from '../components/student/Student'
 import Teacher from '../components/teacher/Teacher'
+import CourseDetail from '../components/course/CourseDetail'
 
 Vue.use(VueRouter)
 
@@ -40,6 +41,10 @@ const routes = [
       {
         path: '/findCourses',
         component: Course
+      },
+      {
+        path: '/findCourseDetail',
+        component: CourseDetail
       },
       {
         path: '/findStudents',

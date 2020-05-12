@@ -14,7 +14,7 @@
         </el-row>
         <el-row :gutter="20" >
           电子邮箱：<el-input placeholder="请输入内容" v-model="student.mail" clearable></el-input>
-          学生年级：<el-select v-model="grade" filterable placeholder="请选择">
+          学生年级：<el-select v-model="student.grade" filterable placeholder="请选择">
           <el-option
             v-for="item in options"
             :key="item"
@@ -451,10 +451,10 @@ export default {
     margin-bottom: 15px;
   }
   .el-select{
-    width: 300px;
-    margin-right: 30px;
-    margin-bottom: 15px;
-  }
+      width: 300px;
+      margin-right: 30px;
+      margin-bottom: 15px;
+    }
   .diaglog >>> .el-input__inner {
     width: 300px!important;
     margin-right: 30px;

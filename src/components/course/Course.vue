@@ -25,7 +25,7 @@
         <el-table-column label="课程名称" prop="name"></el-table-column>
         <el-table-column label="学生人数" prop="stuNumber"></el-table-column>
         <el-table-column label="使用书籍" prop="useBook"></el-table-column>
-        <el-table-column label="操作" width="170px">
+        <el-table-column label="操作" width="210px">
           <template slot-scope="scope">
             <el-tooltip :enterable="false" effect="dark" placement="top" content="修改">
               <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
@@ -33,6 +33,7 @@
             <el-tooltip :enterable="false" effect="dark" placement="top" content="删除">
               <el-button type="danger" icon="el-icon-delete" size="mini" @click="removeAccountById(scope.row.id)"></el-button>
             </el-tooltip>
+              <el-button type="info" icon="el-icon-check" size="mini" @click="findDetail(scope.row.id)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -143,6 +144,10 @@ export default {
     this.getCourseListByOthers()
   },
   methods: {
+    findDetail (id) {
+      window.sessionStorage.setItem('courseId', id)
+      this.$router.push('/findCourseDetail')
+    },
     async showEditDialog (id) {
       console.log(id)
       const { data: res } = await this.$http.get('http://localhost:8080/course/findCourseById/' + id)

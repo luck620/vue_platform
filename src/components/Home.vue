@@ -55,7 +55,11 @@ export default {
         2: 'iconfont icon-danju',
         3: 'iconfont icon-baobiao',
         4: 'iconfont icon-users',
-        5: 'iconfont icon-users'
+        5: 'iconfont icon-users',
+        6: 'iconfont icon-danju',
+        7: 'iconfont icon-baobiao',
+        8: 'iconfont icon-danju',
+        9: 'iconfont icon-baobiao'
       },
       isCollapse: false,
       activePath: ''

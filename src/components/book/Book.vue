@@ -10,7 +10,7 @@
         <el-row :gutter="20" >
           图书名称：<el-input placeholder="请输入内容" v-model="book.name" clearable></el-input>
           图书出版社：<el-input placeholder="请输入内容" v-model="book.publish" clearable></el-input>
-          图书类型：<el-select v-model="type" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
+          图书类型：<el-select clearable v-model="book.type" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
           <el-option
             v-for="item in options"
             :key="item"
@@ -20,16 +20,7 @@
         </el-select>
         </el-row>
         <el-row :gutter="20">
-          添加时间：<el-date-picker
-            v-model="book.addTimeStartAndEnd"
-            value-format="yyyy-MM-dd HH:mm:ss"
-            :unlink-panels=true
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期" clearable>
-          </el-date-picker>
-          发 行 时 间：<el-date-picker
+          发行时间：<el-date-picker
             v-model="book.publishTimeStartAndEnd"
             value-format="yyyy-MM-dd HH:mm:ss"
             :unlink-panels=true
@@ -38,6 +29,8 @@
             start-placeholder="开始日期"
             end-placeholder="结束日期" clearable>
           </el-date-picker>
+          作者：<el-input placeholder="请输入内容" v-model="book.author" clearable></el-input>
+          ISBN：<el-input placeholder="请输入内容" v-model="book.isbn" clearable></el-input>
           <el-button type="success" square @click="getBookListByOthers">查询</el-button>
           <el-button type="info" square @click="resetTextForm">重置</el-button>
         </el-row>
@@ -50,11 +43,18 @@
       <!--列表数据显示-->
       <el-table :data="bookList" border stripe>
         <el-table-column label="序号" type="index"></el-table-column>
+        <el-table-column label="图书封面" prop="imageUrl">
+          <template scope="scope">
+            <img :src="scope.row.imageUrl" width="120" height="180"/>
+          </template>
+        </el-table-column>
         <el-table-column label="图书名称" prop="name"></el-table-column>
         <el-table-column label="图书出版社" prop="publish"></el-table-column>
+        <el-table-column label="ISBN" prop="isbn"></el-table-column>
         <el-table-column label="图书类型" prop="type"></el-table-column>
-        <el-table-column label="添加时间" prop="addTime"></el-table-column>
+        <el-table-column label="作者" prop="author"></el-table-column>
         <el-table-column label="发行时间" prop="publishTime"></el-table-column>
+        <el-table-column label="简介" prop="introduction"></el-table-column>
         <el-table-column label="操作" width="170px">
           <template slot-scope="scope">
             <el-tooltip :enterable="false" effect="dark" placement="top" content="修改">
@@ -80,15 +80,44 @@
     <!--添加-->
     <el-dialog title="添加图书" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed" class="diaglog">
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px">
+        上传图书封面<el-upload
+          class="avatar-uploader"
+          :multiple="true"
+          action="http://upload-z2.qiniup.com"
+          accept="image/jpeg,image/gif,image/png,image/bmp"
+          :show-file-list="false"
+          :data="postData"
+          :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload"
+          :on-error="handleError">
+          <img v-if="imageUrl" :src="imageUrl" class="avatar">
+          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+        </el-upload>
         <el-form-item label="图书名称" prop="name">
           <el-input v-model="addForm.name" ></el-input>
         </el-form-item>
         <el-form-item label="图书出版社" prop="publish">
           <el-input v-model="addForm.publish"></el-input>
         </el-form-item>
-        <el-form-item label="图书类型" prop="type">
-          <el-input v-model="addForm.type"></el-input>
+        <el-form-item label="ISBN" prop="isbn">
+          <el-input v-model="addForm.isbn" ></el-input>
         </el-form-item>
+        <el-form-item label="作者" prop="author">
+        <el-input v-model="addForm.author" ></el-input>
+      </el-form-item>
+        <el-form-item label="简介" prop="introduction">
+          <el-input v-model="addForm.introduction" type="textarea" ></el-input>
+        </el-form-item>
+        <div class="addType" style="margin-left: 30px">
+          图书类型<el-select clearable style="margin-left: 12px" v-model="addForm.type" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
+          <el-option
+            v-for="item in options"
+            :key="item"
+            :label="item"
+            :value="item">
+          </el-option>
+        </el-select>
+        </div>
         <el-form-item label="发行时间" prop="publishTime">
           <el-date-picker
             v-model="addForm.publishTime"
@@ -107,23 +136,44 @@
     <!--修改-->
     <el-dialog title="修改图书信息" :visible.sync="editDialogVisible" width="32%" @close="editDialogClosed" class="diaglog">
       <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="100px">
+        上传图书封面<el-upload
+        class="avatar-uploader"
+        :multiple="true"
+        action="http://upload-z2.qiniup.com"
+        accept="image/jpeg,image/gif,image/png,image/bmp"
+        :show-file-list="false"
+        :data="postData"
+        :on-success="handleAvatarSuccess"
+        :before-upload="beforeAvatarUpload"
+        :on-error="handleError">
+        <img v-if="imageUrl" :src="imageUrl" class="avatar">
+        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+      </el-upload>
         <el-form-item label="图书名称" prop="name">
           <el-input v-model="editForm.name"></el-input>
         </el-form-item>
         <el-form-item label="图书出版社" prop="publish">
           <el-input v-model="editForm.publish"></el-input>
         </el-form-item>
-        <el-form-item label="图书类型" prop="type">
-          <el-input v-model="editForm.type"></el-input>
+        <el-form-item label="ISBN" prop="isbn">
+          <el-input v-model="editForm.isbn" ></el-input>
         </el-form-item>
-        <el-form-item label="添加时间" prop="addTime">
-          <el-date-picker
-            v-model="editForm.addTime"
-            value-format="yyyy-MM-dd HH:mm:ss"
-            type="datetime"
-            placeholder="选择日期时间">
-          </el-date-picker>
+        <el-form-item label="作者" prop="author">
+          <el-input v-model="editForm.author" ></el-input>
         </el-form-item>
+        <el-form-item label="简介" prop="introduction">
+          <el-input v-model="editForm.introduction" type="textarea" ></el-input>
+        </el-form-item>
+        <div class="addType" style="margin-left: 30px">
+          图书类型<el-select style="margin-left: 12px" v-model="editForm.type" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
+          <el-option
+            v-for="item in options"
+            :key="item"
+            :label="item"
+            :value="item">
+          </el-option>
+        </el-select>
+        </div>
         <el-form-item label="发行时间" prop="publishTime">
           <el-date-picker
             v-model="editForm.publishTime"
@@ -149,13 +199,18 @@ export default {
       options: [],
       loading: false,
       type: '',
+      imageUrl: '',
+      imageURL: '',
+      postData: {
+        token: '',
+        key: ''
+      },
       book: {
         name: '',
         publish: '',
         type: '',
-        addTimeStartAndEnd: '',
-        addTimeStart: '',
-        addTimeEnd: '',
+        isbn: '',
+        author: '',
         publishTimeStartAndEnd: '',
         publishTimeStart: '',
         publishTimeEnd: ''
@@ -172,7 +227,10 @@ export default {
         name: '',
         publish: '',
         type: '',
-        addTime: '',
+        author: '',
+        isbn: '',
+        introduction: '',
+        imageUrl: '',
         publishTime: ''
       },
       addFormRules: {
@@ -203,7 +261,10 @@ export default {
         name: '',
         publish: '',
         type: '',
-        addTime: '',
+        author: '',
+        isbn: '',
+        introduction: '',
+        imageUrl: '',
         publishTime: ''
       },
       editFormRules: {
@@ -236,8 +297,46 @@ export default {
     this.getBookList()
     this.getBookListByOthers()
     this.remoteMethod()
+    this.getToken()
   },
   methods: {
+    async getToken () {
+      await this.$http.get('http://localhost:8080/getUpToken').then((res) => {
+        console.log(res)
+        this.postData.token = res.data
+      })
+    },
+    handleError: function (res) {
+      console.log(res)
+      this.$message({
+        message: '上传失败',
+        duration: 2000,
+        type: 'warning'
+      })
+    },
+    handleAvatarSuccess (res, file) {
+      console.log(res)
+      console.log(file)
+      console.log(file.raw)
+      this.$message.success('上传成功')
+      this.imageUrl = 'http://qaath1lbd.bkt.clouddn.com/' + res.key
+      this.imageURL = res.key
+      console.log(this.imageUrl)
+    },
+    beforeAvatarUpload (file) {
+      this.postData.key = file.name
+      const isJPG = file.type === 'image/jpeg'
+      const isPNG = file.type === 'image/png'
+      const isLt2M = file.size / 1024 / 1024 < 2
+
+      if (!isJPG && !isPNG) {
+        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!')
+      }
+      return isJPG && isLt2M
+    },
     async remoteMethod () {
       const { data: res } = await this.$http.get('http://localhost:8080/book/findAllType')
       console.log(res)
@@ -254,9 +353,9 @@ export default {
       this.book.name = ''
       this.book.publish = ''
       this.book.type = ''
-      this.book.addTimeStartAndEnd = ''
       this.book.publishTimeStartAndEnd = ''
-      this.type = ''
+      this.book.author = ''
+      this.book.isbn = ''
     },
     async getBookList () {
       await this.$http.get('http://localhost:8080/book/getBookList/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '').then((res) => {
@@ -268,19 +367,11 @@ export default {
       })
     },
     async getBookListByOthers () {
-      console.log(this.book.addTimeStartAndEnd)
       console.log(this.book.publishTimeStartAndEnd)
-      if (this.book.addTimeStartAndEnd !== '') {
-        this.book.addTimeStart = this.book.addTimeStartAndEnd[0]
-        this.book.addTimeEnd = this.book.addTimeStartAndEnd[1]
-      }
       if (this.book.publishTimeStartAndEnd !== '') {
         this.book.publishTimeStart = this.book.publishTimeStartAndEnd[0]
         this.book.publishTimeEnd = this.book.publishTimeStartAndEnd[1]
       }
-      this.book.type = this.type
-      console.log(this.book.addTimeStart)
-      console.log(this.book.addTimeEnd)
       console.log(this.book.publishTimeStart)
       console.log(this.book.publishTimeEnd)
       const { data: res } = await this.$http.post('http://localhost:8080/book/getBookListByOthers/' + (this.queryInfo.pageNum - 1) + '/' + this.queryInfo.pageSize + '', this.book)
@@ -291,11 +382,21 @@ export default {
     handleSizeChange (newSize) {
       console.log(123)
       this.queryInfo.pageSize = newSize
-      this.getBookList()
+      if (this.book.type === '' && this.book.publishTimeStartAndEnd === '' && this.book.publishTimeStart === '' && this.book.publishTimeEnd === '' &&
+        this.book.publish === '' && this.book.author === '' && this.book.isbn === '' && this.book.name === '') {
+        this.getBookList()
+      } else {
+        this.getBookListByOthers()
+      }
     },
     handleCurrentChange (newPage) {
       this.queryInfo.pageNum = newPage
-      this.getBookList()
+      if (this.book.type === '' && this.book.publishTimeStartAndEnd === '' && this.book.publishTimeStart === '' && this.book.publishTimeEnd === '' &&
+        this.book.publish === '' && this.book.author === '' && this.book.isbn === '' && this.book.name === '') {
+        this.getBookList()
+      } else {
+        this.getBookListByOthers()
+      }
     },
     addDialogClosed () {
       this.$refs.addFormRef.resetFields()
@@ -304,6 +405,8 @@ export default {
       this.$refs.addFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
+        this.addForm.imageUrl = this.imageURL
+        console.log(this.imageURL)
         const { data: res } = await this.$http.post('http://localhost:8080/book/addBook', this.addForm)
         console.log(res)
         if (res.code !== 200) {
@@ -321,6 +424,7 @@ export default {
       this.$refs.editFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
+        this.editForm.imageUrl = this.imageURL
         const { data: res } = await this.$http.post('http://localhost:8080/book/editBookById/' + this.editForm.id, this.editForm)
         console.log(res)
         if (res.code !== 200) {
@@ -356,6 +460,33 @@ export default {
 }
 </script>
 <style scoped>
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    border: 1px dashed #5191d9;
+    margin-left: 100px;
+    margin-bottom: 30px;
+  }
+  .avatar {
+    cursor: pointer;
+    width: 100px;
+    height: 100px;
+    display: block;
+  }
   .el-breadcrumb{
     margin-bottom: 15px;
     font-size: 12px;

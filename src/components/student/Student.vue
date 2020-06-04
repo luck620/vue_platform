@@ -34,6 +34,11 @@
       <!--列表数据显示-->
       <el-table :data="accountList" border stripe>
         <el-table-column label="序号" type="index"></el-table-column>
+        <el-table-column label="头像" prop="imageUrl">
+          <template scope="scope">
+            <img :src="scope.row.imageUrl" width="120" height="100"/>
+          </template>
+        </el-table-column>
         <el-table-column label="姓名" prop="name"></el-table-column>
         <el-table-column label="学号" prop="sno"></el-table-column>
         <el-table-column label="密码" prop="password"></el-table-column>
@@ -65,6 +70,19 @@
     <!--添加-->
     <el-dialog title="添加学生" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed">
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="80px">
+        上传学生头像<el-upload
+        class="avatar-uploader"
+        :multiple="true"
+        action="http://upload-z2.qiniup.com"
+        accept="image/jpeg,image/gif,image/png,image/bmp"
+        :show-file-list="false"
+        :data="postData"
+        :on-success="handleAvatarSuccess"
+        :before-upload="beforeAvatarUpload"
+        :on-error="handleError">
+        <img v-if="imageUrl" :src="imageUrl" class="avatar">
+        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+      </el-upload>
         <el-form-item label="学生姓名" prop="name">
           <el-input v-model="addForm.name"></el-input>
         </el-form-item>
@@ -100,6 +118,19 @@
     <!--修改-->
     <el-dialog title="修改账户信息" :visible.sync="editDialogVisible" width="32%" @close="editDialogClosed">
       <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="80px">
+          上传学生头像<el-upload
+          class="avatar-uploader"
+          :multiple="true"
+          action="http://upload-z2.qiniup.com"
+          accept="image/jpeg,image/gif,image/png,image/bmp"
+          :show-file-list="false"
+          :data="postData"
+          :on-success="handleAvatarSuccess"
+          :before-upload="beforeAvatarUpload"
+          :on-error="handleError">
+          <img v-if="imageUrl" :src="imageUrl" class="avatar">
+          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+        </el-upload>
         <el-form-item label="学生姓名" prop="name">
           <el-input v-model="editForm.name"></el-input>
         </el-form-item>
@@ -158,6 +189,8 @@ export default {
       cb(new Error('请输入合法的邮箱'))
     }
     return {
+      imageUrl: '',
+      imageURL: '',
       student: {
         name: '',
         sno: '',
@@ -168,6 +201,10 @@ export default {
       options: [
         '大一', '大二', '大三', '大四'
       ],
+      postData: {
+        token: '',
+        key: ''
+      },
       queryInfo: {
         pageNum: 1,
         pageSize: 10
@@ -182,7 +219,8 @@ export default {
         sno: '',
         phone: '',
         mail: '',
-        grade: ''
+        grade: '',
+        imageUrl: ''
       },
       grade: '',
       addFormRules: {
@@ -251,10 +289,11 @@ export default {
       },
       editForm: {
         name: '',
+        sno: '',
         password: '',
-        realName: '',
         phone: '',
-        commit: ''
+        imageUrl: '',
+        grade: ''
       },
       editFormRules: {
         name: [
@@ -331,8 +370,46 @@ export default {
   created () {
     this.getStudentList()
     this.getStudentListByOthers()
+    this.getToken()
   },
   methods: {
+    async getToken () {
+      await this.$http.get('http://localhost:8080/getUpToken').then((res) => {
+        console.log(res)
+        this.postData.token = res.data
+      })
+    },
+    handleError: function (res) {
+      console.log(res)
+      this.$message({
+        message: '上传失败',
+        duration: 2000,
+        type: 'warning'
+      })
+    },
+    handleAvatarSuccess (res, file) {
+      console.log(res)
+      console.log(file)
+      console.log(file.raw)
+      this.$message.success('上传成功')
+      this.imageUrl = 'http://qaath1lbd.bkt.clouddn.com/' + res.key
+      this.imageURL = res.key
+      console.log(this.imageUrl)
+    },
+    beforeAvatarUpload (file) {
+      this.postData.key = file.name
+      const isJPG = file.type === 'image/jpeg'
+      const isPNG = file.type === 'image/png'
+      const isLt2M = file.size / 1024 / 1024 < 2
+
+      if (!isJPG && !isPNG) {
+        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!')
+      }
+      return isJPG && isLt2M
+    },
     async showEditDialog (id) {
       console.log(id)
       const { data: res } = await this.$http.get('http://localhost:8080/student/findStudentById/' + id)
@@ -378,6 +455,7 @@ export default {
       this.$refs.addFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
+        this.addForm.imageUrl = this.imageURL
         this.addForm.grade = this.grade
         const { data: res } = await this.$http.post('http://localhost:8080/student/addStudent', this.addForm)
         console.log(res)
@@ -396,6 +474,7 @@ export default {
       this.$refs.editFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
+        this.editForm.imageUrl = this.imageURL
         const { data: res } = await this.$http.post('http://localhost:8080/student/editStudentById/' + this.editForm.id, this.editForm)
         console.log(res)
         if (res.code !== 200) {
@@ -431,6 +510,34 @@ export default {
 }
 </script>
 <style scoped>
+
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    border: 1px dashed #5191d9;
+    margin-left: 100px;
+    margin-bottom: 30px;
+  }
+  .avatar {
+    cursor: pointer;
+    width: 100px;
+    height: 100px;
+    display: block;
+  }
   .el-breadcrumb{
     margin-bottom: 15px;
     font-size: 12px;

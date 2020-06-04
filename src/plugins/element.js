@@ -26,7 +26,7 @@ import {
   MessageBox,
   DatePicker,
   Select,
-  Option
+  Option, Upload
 } from 'element-ui'
 
 Vue.use(Button)
@@ -54,5 +54,6 @@ Vue.use(Dialog)
 Vue.use(DatePicker)
 Vue.use(Select)
 Vue.use(Option)
+Vue.use(Upload)
 Vue.prototype.$message = Message
 Vue.prototype.$confirm = MessageBox.confirm

@@ -7,22 +7,23 @@
       <el-breadcrumb-item>课程列表详情</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card>
-      <el-form ref="textRow">
-        <el-row :gutter="20" >
-          教师姓名：<el-input placeholder="请输入内容" v-model="teacher.name" clearable></el-input>
-          教师号：<el-input placeholder="请输入内容" v-model="teacher.tno" clearable></el-input>
-          联系方式：<el-input placeholder="请输入内容" v-model="teacher.phone" clearable></el-input>
-          <el-button type="success" square @click="findCourseDetailTea">查询</el-button>
-          <el-button type="info" square @click="resetTeaTextForm">重置</el-button>
-        </el-row>
-      </el-form>
       <!--列表数据显示-->
       <el-table :data="courseDetailTeaList" border stripe>
         <el-table-column label="序号" type="index"></el-table-column>
-        <el-table-column label="教师姓名" prop="name"></el-table-column>
-        <el-table-column label="教师号" prop="tno"></el-table-column>
-        <el-table-column label="联系方式" prop="phone"></el-table-column>
-        <el-table-column label="邮箱" prop="mail"></el-table-column>
+        <el-table-column label="周数" prop="weekST"></el-table-column>
+        <el-table-column label="课时" prop="periodST"></el-table-column>
+        <el-table-column label="课时教学视频外链" prop="videoUrl"></el-table-column>
+        <!--后续完善-->
+<!--        <el-table-column label="操作" width="210px">-->
+<!--          <template slot-scope="scope">-->
+<!--            <el-tooltip :enterable="false" effect="dark" placement="top" content="修改">-->
+<!--              <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>-->
+<!--            </el-tooltip>-->
+<!--            <el-tooltip :enterable="false" effect="dark" placement="top" content="删除">-->
+<!--              <el-button type="danger" icon="el-icon-delete" size="mini" @click="removeAccountById(scope.row.id)"></el-button>-->
+<!--            </el-tooltip>-->
+<!--          </template>-->
+<!--        </el-table-column>-->
       </el-table>
       <!--分页-->
       <el-pagination
@@ -111,34 +112,34 @@ export default {
     }
   },
   created () {
-    this.getCourseDetailList()
+    // this.getCourseDetailList()
     this.findCourseDetailTea()
     this.findCourseDetailStu()
   },
   methods: {
-    resetTeaTextForm () {
-      this.teacher.name = ''
-      this.teacher.tno = ''
-      this.teacher.phone = ''
-    },
+    // resetTeaTextForm () {
+    //   this.teacher.name = ''
+    //   this.teacher.tno = ''
+    //   this.teacher.phone = ''
+    // },
     resetStuTextForm () {
       this.student.name = ''
       this.student.sno = ''
       this.student.phone = ''
       this.student.grade = ''
     },
-    async getCourseDetailList () {
-      console.log(window.sessionStorage.getItem('courseId'))
-      await this.$http.get('http://localhost:8080/course/findCourseDetail/' + window.sessionStorage.getItem('courseId')).then((res) => {
-        console.log(res)
-        console.log(res.data)
-        if (res.status !== 200) return this.$message.error('获取账户列表失败')
-        this.courseDetailList = res.data.content
-        this.total = res.data.totalElements
-      })
-    },
+    // async getCourseDetailList () {
+    //   console.log(window.sessionStorage.getItem('courseId'))
+    //   await this.$http.get('http://localhost:8080/course/findCourseDetail/' + window.sessionStorage.getItem('courseId')).then((res) => {
+    //     console.log(res)
+    //     console.log(res.data)
+    //     if (res.status !== 200) return this.$message.error('获取账户列表失败')
+    //     this.courseDetailList = res.data.content
+    //     this.total = res.data.totalElements
+    //   })
+    // },
     async findCourseDetailTea () {
-      const { data: res } = await this.$http.post('http://localhost:8080/course/findCourseDetailTea/' + window.sessionStorage.getItem('courseId') + '/' + (this.queryInfoTea.pageNum - 1) + '/' + this.queryInfoTea.pageSize + '', this.teacher)
+      const { data: res } = await this.$http.post('http://localhost:8080/course/findCourseDetailPeriod/' + window.sessionStorage.getItem('courseId') + '/' + (this.queryInfoTea.pageNum - 1) + '/' + this.queryInfoTea.pageSize + '')
       console.log(res)
       this.courseDetailTeaList = res.content
       this.totalTea = res.totalElements

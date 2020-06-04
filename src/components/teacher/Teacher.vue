@@ -13,14 +13,6 @@
           教师号：<el-input placeholder="请输入内容" v-model="teacherDTO.tno" clearable></el-input>
         </el-row>
         <el-row :gutter="20" >
-          教授课程：<el-select v-model="courseName" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择" clearable>
-          <el-option
-            v-for="item in options"
-            :key="item"
-            :label="item"
-            :value="item">
-          </el-option>
-        </el-select>
           电子邮箱：<el-input placeholder="请输入内容" v-model="teacherDTO.mail" clearable></el-input>
           <el-button type="success" square @click="getTeacherListByOthers">查询</el-button>
           <el-button type="info" square @click="resetTextForm">重置</el-button>
@@ -34,12 +26,16 @@
       <!--列表数据显示-->
       <el-table :data="teacherList" border stripe>
         <el-table-column label="序号" type="index"></el-table-column>
+        <el-table-column label="头像" prop="imageUrl">
+          <template scope="scope">
+            <img :src="scope.row.imageUrl" width="120" height="100"/>
+          </template>
+        </el-table-column>
         <el-table-column label="姓名" prop="name"></el-table-column>
         <el-table-column label="教师号" prop="tno"></el-table-column>
         <el-table-column label="联系方式" prop="phone"></el-table-column>
         <el-table-column label="密码" prop="password"></el-table-column>
         <el-table-column label="邮箱" prop="mail"></el-table-column>
-        <el-table-column label="教授课程" prop="courseName"></el-table-column>
         <el-table-column label="操作" width="170px">
           <template slot-scope="scope">
             <el-tooltip :enterable="false" effect="dark" placement="top" content="修改">
@@ -65,6 +61,19 @@
     <!--添加-->
     <el-dialog title="添加教师" :visible.sync="addDialogVisible" width="32%" @close="addDialogClosed">
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="80px">
+        上传教师头像<el-upload
+        class="avatar-uploader"
+        :multiple="true"
+        action="http://upload-z2.qiniup.com"
+        accept="image/jpeg,image/gif,image/png,image/bmp"
+        :show-file-list="false"
+        :data="postData"
+        :on-success="handleAvatarSuccess"
+        :before-upload="beforeAvatarUpload"
+        :on-error="handleError">
+        <img v-if="imageUrl" :src="imageUrl" class="avatar">
+        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+      </el-upload>
         <el-form-item label="姓名" prop="name">
           <el-input v-model="addForm.name" ></el-input>
         </el-form-item>
@@ -80,16 +89,16 @@
         <el-form-item label="密码" prop="password">
           <el-input v-model="addForm.password"></el-input>
         </el-form-item>
-        <el-form-item label="教授课程" prop="courseName">
-          <el-select v-model="courseName" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
-            <el-option
-              v-for="item in options"
-              :key="item"
-              :label="item"
-              :value="item">
-            </el-option>
-          </el-select>
-        </el-form-item>
+<!--        <el-form-item label="教授课程" prop="courseName">-->
+<!--          <el-select v-model="courseName" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">-->
+<!--            <el-option-->
+<!--              v-for="item in options"-->
+<!--              :key="item"-->
+<!--              :label="item"-->
+<!--              :value="item">-->
+<!--            </el-option>-->
+<!--          </el-select>-->
+<!--        </el-form-item>-->
       </el-form>
       <!-- 底部区域 -->
       <span slot="footer" class="dialog-footer">
@@ -100,6 +109,19 @@
     <!--修改-->
     <el-dialog title="修改账户信息" :visible.sync="editDialogVisible" width="32%" @close="editDialogClosed">
       <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="80px">
+        修改教师头像<el-upload
+        class="avatar-uploader"
+        :multiple="true"
+        action="http://upload-z2.qiniup.com"
+        accept="image/jpeg,image/gif,image/png,image/bmp"
+        :show-file-list="false"
+        :data="postData"
+        :on-success="handleAvatarSuccess"
+        :before-upload="beforeAvatarUpload"
+        :on-error="handleError">
+        <img v-if="imageUrl" :src="imageUrl" class="avatar">
+        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+      </el-upload>
         <el-form-item label="姓名" prop="name">
           <el-input v-model="editForm.name"></el-input>
         </el-form-item>
@@ -115,16 +137,16 @@
         <el-form-item label="密码" prop="password">
           <el-input v-model="editForm.password"></el-input>
         </el-form-item>
-        <el-form-item label="教授课程" prop="courseName">
-          <el-select v-model="editForm.courseName" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">
-            <el-option
-              v-for="item in options"
-              :key="item"
-              :label="item"
-              :value="item">
-            </el-option>
-          </el-select>
-        </el-form-item>
+<!--        <el-form-item label="教授课程" prop="courseName">-->
+<!--          <el-select v-model="editForm.courseName" filterable remote reserve-keyword :remote-method="remoteMethod" :loading="loading" placeholder="请选择">-->
+<!--            <el-option-->
+<!--              v-for="item in options"-->
+<!--              :key="item"-->
+<!--              :label="item"-->
+<!--              :value="item">-->
+<!--            </el-option>-->
+<!--          </el-select>-->
+<!--        </el-form-item>-->
       </el-form>
       <!-- 底部区域 -->
       <span slot="footer" class="dialog-footer">
@@ -157,7 +179,16 @@ export default {
 
       cb(new Error('请输入合法的邮箱'))
     }
+    // const hasPhone = (rule, value, cb) => {
+    //   const
+    // }
     return {
+      imageUrl: '',
+      imageURL: '',
+      postData: {
+        token: '',
+        key: ''
+      },
       options: [],
       loading: false,
       courseName: '',
@@ -165,8 +196,7 @@ export default {
         name: '',
         phone: '',
         tno: '',
-        mail: '',
-        courseName: ''
+        mail: ''
       },
       queryInfo: {
         pageNum: 1,
@@ -182,7 +212,8 @@ export default {
         tno: '',
         mail: '',
         password: '',
-        courseName: ''
+        imageUrl: ''
+        // courseName: ''
       },
       addFormRules: {
         name: [
@@ -219,8 +250,7 @@ export default {
         mail: [
           { required: true, message: '请输入邮箱', trigger: 'blur' },
           { validator: checkEmail, trigger: 'blur' }
-        ],
-        courseName: []
+        ]
       },
       editForm: {
         name: '',
@@ -228,7 +258,7 @@ export default {
         tno: '',
         mail: '',
         password: '',
-        courseName: ''
+        imageUrl: ''
       },
       editFormRules: {
         name: [
@@ -265,9 +295,6 @@ export default {
         mail: [
           { required: true, message: '请输入邮箱', trigger: 'blur' },
           { validator: checkEmail, trigger: 'blur' }
-        ],
-        courseName: [
-          { required: true, message: '请输入课程名称', trigger: 'blur' }
         ]
       }
     }
@@ -275,14 +302,52 @@ export default {
   created () {
     // this.getTeacherList()
     this.getTeacherListByOthers()
-    this.remoteMethod()
+    // this.remoteMethod()
+    this.getToken()
   },
   methods: {
-    async remoteMethod () {
-      const { data: res } = await this.$http.get('http://localhost:8080/teacher/findAllType')
-      console.log(res)
-      this.options = res
+    async getToken () {
+      await this.$http.get('http://localhost:8080/getUpToken').then((res) => {
+        console.log(res)
+        this.postData.token = res.data
+      })
     },
+    handleError: function (res) {
+      console.log(res)
+      this.$message({
+        message: '上传失败',
+        duration: 2000,
+        type: 'warning'
+      })
+    },
+    handleAvatarSuccess (res, file) {
+      console.log(res)
+      console.log(file)
+      console.log(file.raw)
+      this.$message.success('上传成功')
+      this.imageUrl = 'http://qaath1lbd.bkt.clouddn.com/' + res.key
+      this.imageURL = res.key
+      console.log(this.imageUrl)
+    },
+    beforeAvatarUpload (file) {
+      this.postData.key = file.name
+      const isJPG = file.type === 'image/jpeg'
+      const isPNG = file.type === 'image/png'
+      const isLt2M = file.size / 1024 / 1024 < 2
+
+      if (!isJPG && !isPNG) {
+        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!')
+      }
+      return isJPG && isLt2M
+    },
+    // async remoteMethod () {
+    //   const { data: res } = await this.$http.get('http://localhost:8080/teacher/findAllType')
+    //   console.log(res)
+    //   this.options = res
+    // },
     async showEditDialog (id) {
       console.log(id)
       const { data: res } = await this.$http.get('http://localhost:8080/teacher/findTeacherById/' + id)
@@ -328,7 +393,7 @@ export default {
       this.$refs.addFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
-        this.addForm.courseName = this.courseName
+        this.addForm.imageUrl = this.imageURL
         const { data: res } = await this.$http.post('http://localhost:8080/teacher/addTeacher', this.addForm)
         console.log(res)
         if (res.code !== 200) {
@@ -346,6 +411,7 @@ export default {
       this.$refs.editFormRef.validate(async valid => {
         console.log(valid)
         if (!valid) return
+        this.editForm.imageUrl = this.imageURL
         const { data: res } = await this.$http.post('http://localhost:8080/teacher/editTeacherById/' + this.editForm.id, this.editForm)
         console.log(res)
         if (res.code !== 200) {
@@ -381,6 +447,34 @@ export default {
 }
 </script>
 <style scoped>
+
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    border: 1px dashed #5191d9;
+    margin-left: 100px;
+    margin-bottom: 30px;
+  }
+  .avatar {
+    cursor: pointer;
+    width: 100px;
+    height: 100px;
+    display: block;
+  }
   .el-breadcrumb{
     margin-bottom: 15px;
     font-size: 12px;

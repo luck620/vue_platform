@@ -304,8 +304,15 @@ export default {
     this.getTeacherListByOthers()
     // this.remoteMethod()
     this.getToken()
+    this.getPhoneList()
   },
   methods: {
+    async getPhoneList () {
+      await this.$http.get('http://localhost:8080/student/getPhoneList').then((res) => {
+        console.log(res)
+        this.phoneList = res.data
+      })
+    },
     async getToken () {
       await this.$http.get('http://localhost:8080/getUpToken').then((res) => {
         console.log(res)
@@ -394,14 +401,24 @@ export default {
         console.log(valid)
         if (!valid) return
         this.addForm.imageUrl = this.imageURL
-        const { data: res } = await this.$http.post('http://localhost:8080/teacher/addTeacher', this.addForm)
-        console.log(res)
-        if (res.code !== 200) {
-          this.$message.error('添加教师失败！')
+        let sign = 0
+        for (const phone of this.phoneList) {
+          if (phone === this.addForm.phone) {
+            sign = 1
+            console.log('123' + phone === this.addForm.phone)
+            this.$message.error('该手机号已被注册！')
+          }
         }
-        this.$message.success('添加教师成功！')
-        this.addDialogVisible = false
-        this.getTeacherListByOthers()
+        if (sign === 0) {
+          const { data: res } = await this.$http.post('http://localhost:8080/teacher/addTeacher', this.addForm)
+          console.log(res)
+          if (res.code !== 200) {
+            this.$message.error('添加教师失败！')
+          }
+          this.$message.success('添加教师成功！')
+          this.addDialogVisible = false
+          this.getTeacherListByOthers()
+        }
       })
     },
     editDialogClosed () {
@@ -412,14 +429,24 @@ export default {
         console.log(valid)
         if (!valid) return
         this.editForm.imageUrl = this.imageURL
-        const { data: res } = await this.$http.post('http://localhost:8080/teacher/editTeacherById/' + this.editForm.id, this.editForm)
-        console.log(res)
-        if (res.code !== 200) {
-          this.$message.error('更新教师信息失败！')
+        let sign = 0
+        for (const phone of this.phoneList) {
+          if (phone === this.editForm.phone) {
+            sign = 1
+            console.log('123' + phone === this.addForm.phone)
+            this.$message.error('该手机号已被注册！')
+          }
         }
-        this.$message.success('更新教师信息成功！')
-        this.editDialogVisible = false
-        this.getTeacherListByOthers()
+        if (sign === 0) {
+          const { data: res } = await this.$http.post('http://localhost:8080/teacher/editTeacherById/' + this.editForm.id, this.editForm)
+          console.log(res)
+          if (res.code !== 200) {
+            this.$message.error('更新教师信息失败！')
+          }
+          this.$message.success('更新教师信息成功！')
+          this.editDialogVisible = false
+          this.getTeacherListByOthers()
+        }
       })
     },
     async removeTeacherById (id) {
